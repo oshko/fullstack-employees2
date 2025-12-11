@@ -25,30 +25,46 @@ res.json(employees);
     res.status(201).send(employees);
 });
 
+
+// Id checking at once:
+router.param('id', (req, res, next, id) => {
+    // Check if id is a valid positive integer (reject scientific notation like 1e10)
+    if (!/^\d+$/.test(id) || +id < 0) {
+        return res.status(400).send("ID must be a positive integer");
+    }
+    next();
+});
+
+// ID 
 router.route('/:id')
 .get(async (req, res)=>{
     const { id } = req.params
-    if(!id) return res.status(400).send("Request need ID!");
     const employee = await getEmployee(id);
-    res.status(201).send(employee);
+    if(!employee) return res.status(404).send("Employee not found!");
+    res.status(200).send(employee);
 })
+
 .put( async(req, res)=>{
+
      if (!req.body) return res.status(400).send("Request body required.");
+    const { id } = req.params;
+    const { name, birthday, salary } = req.body;
 
-    const { id, name, birthday, salary } = req.body;
-
-    if (!id || !name || !birthday || !salary) {
+    if (!name || !birthday || !salary) {
       return res
         .status(400)
-        .send("Missing required fields: id, name, birthday, salary");
+        .send("Missing required fields: name, birthday, salary");
     }
     const updatedEmployees = await updateEmployee({id, name, birthday, salary});
-    res.status(201).send(updatedEmployees);
+    if(!updatedEmployees) return res.status(404).send("Employee not found");
+    res.status(200).send(updatedEmployees);
 })
+
 .delete(async (req, res)=>{
     const { id } = req.params
-    if(!id) return res.status(400).send("Request need ID!");
-    await deleteEmployee(id);
+    const deletedEmployee = await deleteEmployee(id);
+
+    if(!deletedEmployee) return res.status(404).send("Delete failed: employee with that ID not found!");
     res.sendStatus(204);
 });
-// TODO: this file!
+

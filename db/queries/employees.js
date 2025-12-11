@@ -8,8 +8,7 @@ const sql = `
   `;
   
   const { rows: employees } = await db.query(sql, [name, birthday, salary]);
-  return employees;
-  // TODO
+  return employees[0];
 }
 
 // === Part 2 ===
@@ -35,7 +34,7 @@ export async function getEmployee(id) {
   WHERE id = $1
   `;
   const {rows: employee} = await db.query(sql, [id]);
-  return employee;
+  return employee[0];
 }
 
 /**
